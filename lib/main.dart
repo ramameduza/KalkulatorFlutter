@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'landing_page.dart';
 import 'product_page.dart';
 import 'cart_page.dart';
+import 'cart_model.dart';
 
 void main() {
-  runApp(PraktikumMobileApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartModel(),
+      child: PraktikumMobileApp(),
+    ),
+  );
 }
 
 class PraktikumMobileApp extends StatelessWidget {

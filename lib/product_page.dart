@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'cart_model.dart';
 
-class Product {
-  final String name;
-  final double price;
-
-  Product({required this.name, required this.price});
+class ProductPage extends StatefulWidget {
+  @override
+  _ProductPageState createState() => _ProductPageState();
 }
 
-class ProductPage extends StatelessWidget {
+class _ProductPageState extends State<ProductPage> {
   final List<Product> products = [
-    Product(name: 'Mi Ayam', price: 12.000),
-    Product(name: 'Bakso', price: 10.000),
-    Product(name: 'Mi Ayam + Bakso', price: 20.000),
+    Product(name: "Product 1", price: 10),
+    Product(name: "Product 2", price: 20),
+    Product(name: "Product 3", price: 30),
+    Product(name: "Product 4", price: 40),
   ];
 
   @override
@@ -29,26 +30,63 @@ class ProductPage extends StatelessWidget {
       body: ListView.builder(
         itemCount: products.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(products[index].name),
-            subtitle: Text('\$${products[index].price.toStringAsFixed(2)}'),
-            trailing: ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${products[index].name} added to cart'))
-                );
-              },
-              child: Text('Add to Cart'),
-            ),
-          );
+          return ProductListItem(product: products[index]);
         },
       ),
     );
   }
 }
 
-void main() {
-  runApp(MaterialApp(
-    home: ProductPage(),
-  ));
+class Product {
+  final String name;
+  final int price;
+  int quantity;
+
+  Product({required this.name, required this.price, this.quantity = 0});
+}
+
+class ProductListItem extends StatelessWidget {
+  final Product product;
+
+  ProductListItem({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    final cart = Provider.of<CartModel>(context);
+
+    return ListTile(
+      title: Text(product.name),
+      subtitle: Text('\$${product.price}'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.remove),
+            onPressed: () {
+              cart.remove(product);
+            },
+          ),
+          Text(product.quantity.toString()),
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              cart.addToCart(product);
+            },
+          ),
+          ElevatedButton(
+            onPressed: () {
+              cart.addToCart(product);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${product.name} added to cart!'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            child: Text('Add to Cart'),
+          ),
+        ],
+      ),
+    );
+  }
 }
