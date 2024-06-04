@@ -8,6 +8,13 @@ class CartPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context);
 
+    void _showSnackbar(BuildContext context, String productName) {
+      final snackBar = SnackBar(
+        content: Text('$productName telah dihapus dari keranjang'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Cart Page'),
@@ -24,10 +31,46 @@ class CartPage extends StatelessWidget {
             child: ListView.builder(
               itemCount: cart.cart.length,
               itemBuilder: (context, index) {
+                final product = cart.cart[index];
                 return ListTile(
-                  title: Text(cart.cart[index].name),
-                  subtitle: Text('\$${cart.cart[index].price} x ${cart.cart[index].quantity}'),
-                  trailing: Text('Total: \$${cart.cart[index].price * cart.cart[index].quantity}'),
+                  title: Text(product.name),
+                  subtitle: Text('\$${product.price} x ${product.quantity}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Total: \$${product.price * product.quantity}'),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Konfirmasi Penghapusan'),
+                                content: Text('Anda yakin ingin menghapus ${product.name} dari keranjang?'),
+                                actions: [
+                                  TextButton(
+                                    child: Text('Batal'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text('Hapus'),
+                                    onPressed: () {
+                                      cart.removeFromCart(product);
+                                      Navigator.of(context).pop();
+                                      _showSnackbar(context, product.name);
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -35,7 +78,7 @@ class CartPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Total Price: \$${cart.getTotalPrice().toStringAsFixed(2)}',
+              'Total Harga: \$${cart.getTotalPrice().toStringAsFixed(2)}',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
