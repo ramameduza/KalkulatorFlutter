@@ -4,6 +4,7 @@ import 'landing_page.dart';
 import 'product_page.dart';
 import 'cart_page.dart';
 import 'cart_model.dart';
+import 'splash_screen.dart';
 
 void main() {
   runApp(
@@ -22,8 +23,9 @@ class PraktikumMobileApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => SplashScreen(),
         '/': (context) => LandingPage(),
         '/product': (context) => ProductPage(),
         '/cart': (context) => CartPage(),

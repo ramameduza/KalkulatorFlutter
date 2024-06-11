@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'cart_model.dart';
 
 class ProductPage extends StatefulWidget {
@@ -8,12 +10,24 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
-  final List<Product> products = [
-    Product(name: "Product 1", price: 10),
-    Product(name: "Product 2", price: 20),
-    Product(name: "Product 3", price: 30),
-    Product(name: "Product 4", price: 40),
-  ];
+  late Future<List<Product>> futureProducts;
+
+  @override
+  void initState() {
+    super.initState();
+    futureProducts = fetchProducts();
+  }
+
+  Future<List<Product>> fetchProducts() async {
+    final response = await http.get(Uri.parse('http://zonainformatika.com/api/testproduct'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonData = json.decode(response.body);
+      return jsonData.map((item) => Product.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load products');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +41,24 @@ class _ProductPageState extends State<ProductPage> {
           },
         ),
       ),
-      body: ListView.builder(
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          return ProductListItem(product: products[index]);
+      body: FutureBuilder<List<Product>>(
+        future: futureProducts,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Failed to load products'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No products available'));
+          } else {
+            final products = snapshot.data!;
+            return ListView.builder(
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                return ProductListItem(product: products[index]);
+              },
+            );
+          }
         },
       ),
     );
@@ -38,11 +66,31 @@ class _ProductPageState extends State<ProductPage> {
 }
 
 class Product {
+  final int id;
   final String name;
+  final String desc;
   final int price;
+  final String imageUrl;
   int quantity;
 
-  Product({required this.name, required this.price, this.quantity = 0});
+  Product({
+    required this.id,
+    required this.name,
+    required this.desc,
+    required this.price,
+    required this.imageUrl,
+    this.quantity = 0,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'],
+      name: json['name'],
+      desc: json['desc'],
+      price: int.parse(json['price']),
+      imageUrl: json['image_url'],
+    );
+  }
 }
 
 class ProductListItem extends StatelessWidget {
